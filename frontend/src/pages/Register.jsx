@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
+import API from "../services/api";
 
 function Register() {
   const navigate = useNavigate();
@@ -8,13 +8,13 @@ function Register() {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    password: ""
+    password: "",
   });
 
   const handleChange = (e) => {
     setForm({
       ...form,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -22,7 +22,7 @@ function Register() {
     e.preventDefault();
 
     try {
-      const res = await axios.post("/api/auth/register", form);
+      const res = await API.post("/auth/register", form);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -30,57 +30,55 @@ function Register() {
       navigate("/student");
     } catch (err) {
       alert("Registration failed");
-      console.error(err);
+      console.error(err.response?.data || err.message);
     }
   };
 
   return (
-    <div style={{ padding: "40px" }}>
-      <h2>Register</h2>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Create Account</h2>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="name"
-          placeholder="Full Name"
-          value={form.name}
-          onChange={handleChange}
-          required
-        />
+        <form onSubmit={handleSubmit}>
+          <input
+            className="input"
+            type="text"
+            name="name"
+            placeholder="Full Name"
+            value={form.name}
+            onChange={handleChange}
+            required
+          />
 
-        <br /><br />
+          <input
+            className="input"
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
+          <input
+            className="input"
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
 
-        <br /><br />
+          <button className="button" type="submit">
+            Register
+          </button>
+        </form>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-        />
-
-        <br /><br />
-
-        <button type="submit">Register</button>
-      </form>
-
-      <br />
-
-      <p>
-        Already have an account?{" "}
-        <a href="/login">Login</a>
-      </p>
+        <p style={{ marginTop: "15px" }}>
+          Already have an account? <Link to="/">Login</Link>
+        </p>
+      </div>
     </div>
   );
 }

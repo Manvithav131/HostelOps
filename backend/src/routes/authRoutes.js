@@ -13,9 +13,15 @@ router.post("/register", async (req, res) => {
     name,
     email,
     password: hash,
+      role: "student",
   });
 
-  res.json(user);
+  const token = jwt.sign(
+  { id: user._id, role: user.role },
+  process.env.JWT_SECRET
+);
+
+res.json({ token, user });
 });
 
 // Login

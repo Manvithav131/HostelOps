@@ -1,136 +1,152 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import API from "../services/api";
 
 function StudentDashboard() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [complaints, setComplaints] = useState([]);
+const [activeTab, setActiveTab] = useState("new");
+const [category, setCategory] = useState("");
+const [priority, setPriority] = useState("");
+  const token = localStorage.getItem("token");
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (token) {
+      fetchComplaints();
+    }
+  }, [token]);
+
+  const fetchComplaints = async () => {
+    try {
+      const res = await API.get("/complaints/my", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+    "Cache-Control": "no-cache",
+  },
+});
+
+      console.log("Fetched complaints:", res.data);
+      setComplaints(res.data);
+    } catch (err) {
+      console.error("Fetch error:", err.response?.data || err.message);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+console.log("Submitting:", { title, description });
+    try {
+      await API.post(
+        "/complaints",
+        { title, description ,category, priority },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    const newComplaint = {
-      id: Date.now(),
-      title,
-      description,
-      status: "Pending",
-    };
-
-    setComplaints([newComplaint, ...complaints]);
-    setTitle("");
-    setDescription("");
+      setTitle("");
+      setDescription("");
+      fetchComplaints();
+    } catch (err) {
+      console.error("Submit error:", err.response?.data || err.message);
+    }
   };
 
   return (
-    <div style={styles.container}>
-      <aside style={styles.sidebar}>
+    <div className="dashboard-container">
+      <aside className="sidebar">
         <h2>HostelOps</h2>
-        <ul style={styles.nav}>
-          <li>Dashboard</li>
-          <li>My Complaints</li>
-          <li>New Complaint</li>
-        </ul>
+        <ul>
+  <li onClick={() => setActiveTab("new")}>New Complaint</li>
+  <li onClick={() => setActiveTab("list")}>My Complaints</li>
+  <li
+    onClick={() => {
+      localStorage.removeItem("token");
+      window.location.href = "/";
+    }}
+  >
+    Logout
+  </li>
+</ul>
       </aside>
 
-      <main style={styles.main}>
+      <main className="main">
         <h1>Student Dashboard</h1>
 
-        <div style={styles.card}>
-          <h3>Submit New Complaint</h3>
+       {activeTab === "new" && (
+  <div className="card">
+    <h3>Submit New Complaint</h3>
 
-          <form onSubmit={handleSubmit} style={styles.form}>
-            <input
-              type="text"
-              placeholder="Complaint Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              style={styles.input}
-            />
+    <form onSubmit={handleSubmit}>
+      <input
+        className="input"
+        type="text"
+        placeholder="Complaint Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+      />
 
-            <textarea
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              style={styles.textarea}
-            />
+      <textarea
+        className="textarea"
+        placeholder="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        required
+      />
 
-            <button type="submit" style={styles.button}>
-              Submit
-            </button>
-          </form>
+      <select
+  className="input"
+  value={category}
+  onChange={(e) => setCategory(e.target.value)}
+>
+  <option value="">Select Category</option>
+  <option value="electrical">Electrical</option>
+  <option value="plumbing">Plumbing</option>
+  <option value="cleaning">Cleaning</option>
+  <option value="other">Other</option>
+</select>
+
+<select
+  className="input"
+  value={priority}
+  onChange={(e) => setPriority(e.target.value)}
+>
+  <option value="">Select Priority</option>
+  <option value="low">Low</option>
+  <option value="medium">Medium</option>
+  <option value="high">High</option>
+</select>
+
+      <button className="button" type="submit">
+        Submit
+      </button>
+    </form>
+  </div>
+)}
+
+        {activeTab === "list" && (
+  <div className="card">
+    <h3>My Complaints</h3>
+
+    {complaints.length === 0 ? (
+      <p>No complaints yet.</p>
+    ) : (
+      complaints.map((c) => (
+        <div key={c._id} className="complaint-item">
+          <h4>{c.title}</h4>
+          <p>{c.description}</p>
+          <span className="status">{c.status}</span>
         </div>
-
-        <div style={styles.card}>
-          <h3>My Complaints</h3>
-
-          {complaints.length === 0 ? (
-            <p>No complaints yet.</p>
-          ) : (
-            complaints.map((c) => (
-              <div key={c.id} style={styles.complaintItem}>
-                <h4>{c.title}</h4>
-                <p>{c.description}</p>
-                <span style={styles.status}>{c.status}</span>
-              </div>
-            ))
-          )}
-        </div>
+      ))
+    )}
+  </div>
+)}
       </main>
     </div>
   );
 }
-
-const styles = {
-  container: { display: "flex", height: "100vh" },
-  sidebar: {
-    width: "220px",
-    background: "#1e293b",
-    color: "white",
-    padding: "20px",
-  },
-  nav: { listStyle: "none", padding: 0, marginTop: "20px" },
-  main: {
-    flex: 1,
-    padding: "40px",
-    background: "#f1f5f9",
-  },
-  card: {
-    marginTop: "20px",
-    padding: "20px",
-    background: "white",
-    borderRadius: "8px",
-    boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
-  },
-  form: { display: "flex", flexDirection: "column", gap: "10px" },
-  input: {
-    padding: "10px",
-    borderRadius: "5px",
-    border: "1px solid #ddd",
-  },
-  textarea: {
-    padding: "10px",
-    borderRadius: "5px",
-    border: "1px solid #ddd",
-    minHeight: "80px",
-  },
-  button: {
-    padding: "10px",
-    borderRadius: "5px",
-    border: "none",
-    background: "#667eea",
-    color: "white",
-    cursor: "pointer",
-  },
-  complaintItem: {
-    marginTop: "10px",
-    padding: "10px",
-    border: "1px solid #eee",
-    borderRadius: "6px",
-  },
-  status: {
-    fontSize: "12px",
-    color: "#667eea",
-    fontWeight: "bold",
-  },
-};
 
 export default StudentDashboard;
