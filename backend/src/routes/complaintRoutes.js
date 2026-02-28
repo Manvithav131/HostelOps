@@ -4,6 +4,7 @@ const auth = require("../middleware/auth");
 
 // Submit complaint
 router.post("/", auth, async (req, res) => {
+  console.log("dasikjaid")
   const complaint = await Complaint.create({
     ...req.body,
     student: req.user.id,
@@ -22,3 +23,4 @@ router.get("/my", auth, async (req, res) => {
 });
 
 module.exports = router;
+

@@ -6,15 +6,8 @@ const complaintSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    title: {
-      type: String,
-      required: true,
-    },
     category: String,
-    description: {
-      type: String,
-      required: true,
-    },
+    description: String,
     priority: {
       type: String,
       enum: ["low", "medium", "high"],
@@ -29,3 +22,5 @@ const complaintSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("Complaint", complaintSchema);
+
+

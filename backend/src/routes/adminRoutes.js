@@ -13,7 +13,7 @@ router.put("/complaints/:id", auth, async (req, res) => {
   const updated = await Complaint.findByIdAndUpdate(
     req.params.id,
     { status: req.body.status },
-    { returnDocument: "after" }
+    { new: true }
   );
 
   res.json(updated);
